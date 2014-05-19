@@ -135,6 +135,18 @@ bool AppInit(int argc, char* argv[])
     return fRet;
 }
 
+bool static Bind(const CService &addr) {
+    if (IsLimited(addr))
+        return false;
+    std::string strError;
+    if (!BindListenPort(addr, strError))
+    {
+        ThreadSafeMessageBox(strError, _("Peerunity"), wxOK | wxMODAL);
+        return false;
+    }
+    return true;
+}
+
 bool AppInit2(int argc, char* argv[])
 {
 #ifdef _MSC_VER
@@ -194,13 +206,21 @@ bool AppInit2(int argc, char* argv[])
             "  -dbcache=<n>     \t\t  " + _("Set database cache size in megabytes (default: 25)") + "\n" +
             "  -dblogsize=<n>   \t\t  " + _("Set database disk log size in megabytes (default: 100)") + "\n" +
             "  -timeout=<n>     \t  "   + _("Specify connection timeout (in milliseconds)") + "\n" +
-            "  -proxy=<ip:port> \t  "   + _("Connect through socks4 proxy") + "\n" +
-            "  -dns             \t  "   + _("Allow DNS lookups for addnode and connect") + "\n" +
+            "  -proxy=<ip:port> \t  "   + _("Connect through socks proxy") + "\n" +
+            "  -socks=<n>       \t  "   + _("Select the version of socks proxy to use (4 or 5, 5 is default)") + "\n" +
+            "  -noproxy=<net>   \t  "   + _("Do not use proxy for connections to network net (ipv4 or ipv6)") + "\n" +
+            "  -dns             \t  "   + _("Allow DNS lookups for -addnode, -seednode and -connect") + "\n" +
+            "  -proxydns        \t  "   + _("Pass DNS requests to (SOCKS5) proxy") + "\n" +
             "  -port=<port>     \t\t  " + _("Listen for connections on <port> (default: 9901 or testnet: 9903)") + "\n" +
             "  -maxconnections=<n>\t  " + _("Maintain at most <n> connections to peers (default: 125)") + "\n" +
             "  -addnode=<ip>    \t  "   + _("Add a node to connect to and attempt to keep the connection open") + "\n" +
             "  -connect=<ip>    \t\t  " + _("Connect only to the specified node") + "\n" +
+            "  -seednode=<ip>   \t\t  " + _("Connect to a node to retrieve peer addresses, and disconnect") + "\n" +
+            "  -externalip=<ip> \t  "   + _("Specify your own public address") + "\n" +
+            "  -onlynet=<net>   \t  "   + _("Only connect to nodes in network <net> (IPv4 or IPv6)") + "\n" +
+            "  -discover        \t  "   + _("Try to discover public IP address (default: 1)") + "\n" +
             "  -listen          \t  "   + _("Accept connections from outside (default: 1)") + "\n" +
+            "  -bind=<addr>     \t  "   + _("Bind to given address. Use [host]:port notation for IPv6") + "\n" +
 #ifdef QT_GUI
             "  -lang=<lang>     \t\t  " + _("Set language, for example \"de_DE\" (default: system locale)") + "\n" +
 #endif
@@ -348,7 +368,7 @@ bool AppInit2(int argc, char* argv[])
     static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
     if (!lock.try_lock())
     {
-        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Peerunity is probably already running."), GetDataDir().string().c_str()), _("PPCoin"), wxOK|wxMODAL);
+        ThreadSafeMessageBox(strprintf(_("Cannot obtain a lock on data directory %s.  Peerunity is probably already running."), GetDataDir().string().c_str()), _("Peerunity"), wxOK|wxMODAL);
         return false;
     }
 
@@ -527,10 +547,31 @@ bool AppInit2(int argc, char* argv[])
         addrProxy = CService(mapArgs["-proxy"], 9050);
         if (!addrProxy.IsValid())
         {
-            ThreadSafeMessageBox(_("Invalid -proxy address"), _("PPCcoin"), wxOK | wxMODAL);
+            ThreadSafeMessageBox(_("Invalid -proxy address"), _("Peerunity"), wxOK | wxMODAL);
             return false;
         }
     }
+
+    if (mapArgs.count("-noproxy"))
+    {
+        BOOST_FOREACH(std::string snet, mapMultiArgs["-noproxy"]) {
+            enum Network net = ParseNetwork(snet);
+            if (net == NET_UNROUTABLE) {
+                ThreadSafeMessageBox(_("Unknown network specified in -noproxy"), _("Peerunity"), wxOK | wxMODAL);
+                return false;
+            }
+            SetNoProxy(net);
+        }
+    }
+
+    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) {
+        SoftSetBoolArg("-dnsseed", false);
+        SoftSetBoolArg("-listen", false);
+    }
+
+    // even in Tor mode, if -bind is specified, you really want -listen
+    if (mapArgs.count("-bind"))
+        SoftSetBoolArg("-listen", true);
 
     bool fTor = (fUseProxy && addrProxy.GetPort() == 9050);
     if (fTor)
@@ -539,13 +580,37 @@ bool AppInit2(int argc, char* argv[])
         // Note: the GetBoolArg() calls for all of these must happen later.
         SoftSetBoolArg("-listen", false);
         SoftSetBoolArg("-irc", false);
-        SoftSetBoolArg("-dnsseed", false);
+        SoftSetBoolArg("-proxydns", true);
         SoftSetBoolArg("-upnp", false);
-        SoftSetBoolArg("-dns", false);
+        SoftSetBoolArg("-discover", false);
     }
 
-    fAllowDNS = GetBoolArg("-dns");
+    if (mapArgs.count("-onlynet")) {
+        std::set<enum Network> nets;
+        BOOST_FOREACH(std::string snet, mapMultiArgs["-onlynet"]) {
+            enum Network net = ParseNetwork(snet);
+            if (net == NET_UNROUTABLE) {
+                ThreadSafeMessageBox(_("Unknown network specified in -onlynet"), _("Peerunity"), wxOK | wxMODAL);
+                return false;
+            }
+            nets.insert(net);
+        }
+        for (int n = 0; n < NET_MAX; n++) {
+            enum Network net = (enum Network)n;
+            if (!nets.count(net))
+                SetLimited(net);
+        }
+    }
+
+    fNameLookup = GetBoolArg("-dns");
+    fProxyNameLookup = GetBoolArg("-proxydns");
+    if (fProxyNameLookup)
+        fNameLookup = true;
     fNoListen = !GetBoolArg("-listen", true);
+    nSocksVersion = GetArg("-socks", 5);
+
+    BOOST_FOREACH(string strDest, mapMultiArgs["-seednode"])
+        AddOneShot(strDest);
 
     // Continue to put "/P2SH/" in the coinbase to monitor
     // BIP16 support.
@@ -553,25 +618,29 @@ bool AppInit2(int argc, char* argv[])
     const char* pszP2SH = "/P2SH/";
     COINBASE_FLAGS << std::vector<unsigned char>(pszP2SH, pszP2SH+strlen(pszP2SH));
 
+    bool fBound = false;
     if (!fNoListen)
     {
         std::string strError;
-        if (!BindListenPort(strError))
-        {
-            ThreadSafeMessageBox(strError, _("Peerunity"), wxOK | wxMODAL);
-            return false;
+        if (mapArgs.count("-bind")) {
+            BOOST_FOREACH(std::string strBind, mapMultiArgs["-bind"]) {
+                fBound |= Bind(CService(strBind, GetDefaultPort(), false));
+            }
+        } else {
+            struct in_addr inaddr_any = {s_addr: INADDR_ANY};
+            fBound |= Bind(CService(inaddr_any, GetDefaultPort()));
+#ifdef USE_IPV6
+            fBound |= Bind(CService(in6addr_any, GetDefaultPort()));
+#endif
         }
+        if (!fBound)
+            return false;
     }
 
-    if (mapArgs.count("-addnode"))
+    if (mapArgs.count("-externalip"))
     {
-        BOOST_FOREACH(string strAddr, mapMultiArgs["-addnode"])
-        {
-            CAddress addr(CService(strAddr, GetDefaultPort(), fAllowDNS));
-            addr.nTime = 0; // so it won't relay unless successfully connected
-            if (addr.IsValid())
-                addrman.Add(addr, CNetAddr("127.0.0.1"));
-        }
+        BOOST_FOREACH(string strAddr, mapMultiArgs["-externalip"])
+            AddLocal(CNetAddr(strAddr, fNameLookup), LOCAL_MANUAL);
     }
 
     if (mapArgs.count("-paytxfee"))

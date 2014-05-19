@@ -342,6 +342,60 @@ public:
 typedef boost::interprocess::interprocess_semaphore CSemaphore;
 #endif
 
+/** RAII-style semaphore lock */
+class CSemaphoreGrant
+{
+private:
+    CSemaphore *sem;
+    bool fHaveGrant;
+
+public:
+    void Acquire() {
+        if (fHaveGrant)
+            return;
+        sem->wait();
+        fHaveGrant = true;
+    }
+
+    void Release() {
+        if (!fHaveGrant)
+            return;
+        sem->post();
+        fHaveGrant = false;
+    }
+
+    bool TryAcquire() {
+        if (!fHaveGrant && sem->try_wait())
+            fHaveGrant = true;
+        return fHaveGrant;
+    }
+
+    void MoveTo(CSemaphoreGrant &grant) {
+        grant.Release();
+        grant.sem = sem;
+        grant.fHaveGrant = fHaveGrant;
+        sem = NULL;
+        fHaveGrant = false;
+    }
+
+    CSemaphoreGrant() : sem(NULL), fHaveGrant(false) {}
+
+    CSemaphoreGrant(CSemaphore &sema, bool fTry = false) : sem(&sema), fHaveGrant(false) {
+        if (fTry)
+            TryAcquire();
+        else
+            Acquire();
+    }
+
+    ~CSemaphoreGrant() {
+        Release();
+    }
+
+    operator bool() {
+        return fHaveGrant;
+    }
+};
+
 inline std::string i64tostr(int64 n)
 {
     return strprintf("%"PRI64d, n);
