@@ -3101,6 +3101,108 @@ Value sendrawtransaction(const Array& params, bool fHelp)
     return hashTx.GetHex();
 }
 
+Value gettxout(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw runtime_error(
+            "gettxout \"txid\" n ( includemempool )\n"
+            "\nReturns details about an unspent transaction output.\n"
+            "\nArguments:\n"
+            "1. \"txid\" (string, required) The transaction id\n"
+            "2. n (numeric, required) vout value\n"
+            "3. includemempool (boolean, optional) Whether to included the mem pool\n"
+            "\nResult:\n"
+            "{\n"
+            " \"bestblock\" : \"hash\", (string) the block hash\n"
+            " \"confirmations\" : n, (numeric) The number of confirmations\n"
+            " \"value\" : x.xxx, (numeric) The transaction value in btc\n"
+            " \"scriptPubKey\" : { (json object)\n"
+            " \"asm\" : \"code\", (string) \n"
+            " \"hex\" : \"hex\", (string) \n"
+            " \"reqSigs\" : n, (numeric) Number of required signatures\n"
+            " \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
+            " \"addresses\" : [ (array of string) array of bitcoin addresses\n"
+            " \"bitcoinaddress\" (string) bitcoin address\n"
+            " ,...\n"
+            " ]\n"
+            " },\n"
+            " \"version\" : n, (numeric) The version\n"
+            " \"coinbase\" : true|false (boolean) Coinbase or not\n"
+            "}\n");
+
+    Object ret;
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+    int n = params[1].get_int();
+    bool fMempool = true;
+    if (params.size() > 2)
+        fMempool = params[2].get_bool();
+
+    if (n < 0)
+        return Value::null;
+
+    COutPoint outpoint = COutPoint(hash, n);
+    bool fFound = false, fInMempool = false;
+    uint256 hashBlock;
+    int nConfirmations = 0;
+    CTransaction tx;
+
+    if(fMempool)
+    {
+        LOCK(mempool.cs);
+        if (mempool.mapNextTx.count(outpoint))
+            return Value::null;
+        if (mempool.exists(hash))
+        {
+            tx = mempool.lookup(hash);
+            if (n >= tx.vout.size())
+                return Value::null;
+            fFound = true;
+            fInMempool = true;
+        }
+    }
+
+    if(!fFound)
+    {
+        CTxDB txdb("r");
+        CTxIndex txindex;
+        if (!txdb.ReadTxIndex(hash, txindex))
+            return Value::null;
+        if (n >= txindex.vSpent.size())
+            return Value::null;
+        if (!txindex.vSpent[n].IsNull())
+            return Value::null;
+        if (!tx.ReadFromDisk(txindex.pos))
+            return Value::null;
+        CBlock block;
+        if (block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
+        {
+            hashBlock = block.GetHash();
+            map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
+            if (mi != mapBlockIndex.end() && (*mi).second)
+            {
+                CBlockIndex* pindex = (*mi).second;
+                if (pindex->IsInMainChain())
+                {
+                    nConfirmations = 1 + nBestHeight - pindex->nHeight;
+                }
+            }
+        }
+    }
+
+    ret.push_back(Pair("bestblock", fInMempool ? "" : hashBlock.GetHex()));
+    ret.push_back(Pair("confirmations", nConfirmations));
+    ret.push_back(Pair("value", ValueFromAmount(tx.vout[n].nValue)));
+    ret.push_back(Pair("version", tx.nVersion));
+    Object o;
+    ScriptPubKeyToJSON(tx.vout[n].scriptPubKey, o);
+    ret.push_back(Pair("scriptPubKey", o));
+    ret.push_back(Pair("coinbase", tx.IsCoinBase()));
+    ret.push_back(Pair("coinstake", tx.IsCoinStake()));
+
+    return ret;
+}
 
 //
 // Call Table
@@ -3172,6 +3274,7 @@ static const CRPCCommand vRPCCommands[] =
     { "decoderawtransaction",   &decoderawtransaction,   false},
     { "signrawtransaction",     &signrawtransaction,     false},
     { "sendrawtransaction",     &sendrawtransaction,     false},
+    { "gettxout",               &gettxout,               true },
 };
 
 CRPCTable::CRPCTable()
@@ -3871,6 +3974,8 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "signrawtransaction"     && n > 1) ConvertTo<Array>(params[1]);
     if (strMethod == "signrawtransaction"     && n > 2) ConvertTo<Array>(params[2]);
     if (strMethod == "sendrawtransaction"     && n > 1) ConvertTo<boost::int64_t>(params[1]);
+    if (strMethod == "gettxout"               && n > 1) ConvertTo<int64_t>(params[1]);
+    if (strMethod == "gettxout"               && n > 2) ConvertTo<bool>(params[2]);
 
     return params;
 }
