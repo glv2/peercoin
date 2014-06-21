@@ -490,12 +490,12 @@ void SendCoinsDialog::coinControlUpdateLabels()
         return;
     
     // set pay amounts
-    CoinControlDialog::payAmounts.clear();
+    CoinControlDialog::payAddresses.clear();
     for(int i = 0; i < ui->entries->count(); ++i)
     {
         SendCoinsEntry *entry = qobject_cast<SendCoinsEntry*>(ui->entries->itemAt(i)->widget());
         if(entry)
-            CoinControlDialog::payAmounts.append(entry->getValue().amount);
+            CoinControlDialog::payAddresses.append(std::make_pair(entry->getValue().address, entry->getValue().amount));
     }
         
     if (CoinControlDialog::coinControl->HasSelected())
