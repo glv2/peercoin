@@ -448,85 +448,99 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
-    // Inputs
-    BOOST_FOREACH(const COutput& out, vOutputs)
+    nPayFee = nTransactionFee;
+    loop
     {
-        // Quantity
-        nQuantity++;
-            
-        // Amount
-        nAmount += out.tx->vout[out.i].nValue;
-        
-        // Priority
-        dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
-        
-        // Bytes
-        txDummy.vin.push_back(CTxIn(out.tx->vout[out.i].GetHash(), out.tx->vout[out.i].nValue));
-        nBytesInputs += 73; // Future ECDSA signature in DER format
-    }
+        txDummy.vin.clear();
+        txDummy.vout.clear();
+        nQuantity = 0;
+        nAmount = 0;
+        dPriorityInputs = 0;
+        nBytesInputs = 0;
 
-    // Outputs
-    BOOST_FOREACH(const PAIRTYPE(QString, qint64) &payee, CoinControlDialog::payAddresses)
-    {
-        QString address = payee.first;
-        qint64 amount = payee.second;
-        CScript scriptPubKey;
-        scriptPubKey.SetDestination(CBitcoinAddress(address.toStdString()).Get());
-        CTxOut txout(amount, scriptPubKey);
-        txDummy.vout.push_back(txout);
-    }
-    
-    // calculation
-    if (nQuantity > 0)
-    {
-        // Consider that the transaction will have a change address
-        CTxOut txout(0, (CScript)vector<unsigned char>(24, 0));
-        txDummy.vout.push_back(txout);
-
-        // Bytes
-        nBytes = nBytesInputs + GetSerializeSize(*(CTransaction*)&txDummy, SER_NETWORK, PROTOCOL_VERSION);
-
-        // Priority
-        dPriority = dPriorityInputs / nBytes;
-        sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
-        
-        // Fee
-        int64 nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
-        
-        // Min Fee
-        int64 nMinFee = txDummy.GetMinFee(1, false, GMF_SEND, nBytes);
-        
-        nPayFee = max(nFee, nMinFee);
-        
-        if (nPayAmount > 0)
+        // Inputs
+        BOOST_FOREACH(const COutput& out, vOutputs)
         {
-            nChange = nAmount - nPayFee - nPayAmount;
-            
-            // if sub-cent change is required, the fee must be raised to at least CTransaction::nMinTxFee   
-            if (nPayFee < CENT && nChange > 0 && nChange < CENT)
-            {
-                if (nChange < CENT) // change < 0.01 => simply move all change to fees
-                {
-                    nPayFee = nChange;
-                    nChange = 0;
-                }
-                else
-                {
-                    nChange = nChange + nPayFee - CENT;
-                    nPayFee = CENT;
-                }  
-            }
-            
-            if (nChange == 0)
-                nBytes -= 34;
+            // Quantity
+            nQuantity++;
+
+            // Amount
+            nAmount += out.tx->vout[out.i].nValue;
+
+            // Priority
+            dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
+
+            // Bytes
+            txDummy.vin.push_back(CTxIn(out.tx->vout[out.i].GetHash(), out.tx->vout[out.i].nValue));
+            nBytesInputs += 73; // Future ECDSA signature in DER format
         }
-        
-        // after fee
-        nAfterFee = nAmount - nPayFee;
-        if (nAfterFee < 0)
-            nAfterFee = 0;
+
+        // Outputs
+        BOOST_FOREACH(const PAIRTYPE(QString, qint64) &payee, CoinControlDialog::payAddresses)
+        {
+            QString address = payee.first;
+            qint64 amount = payee.second;
+            CScript scriptPubKey;
+            scriptPubKey.SetDestination(CBitcoinAddress(address.toStdString()).Get());
+            CTxOut txout(amount, scriptPubKey);
+            txDummy.vout.push_back(txout);
+        }
+
+        // calculation
+        if (nQuantity > 0)
+        {
+            nChange = nAmount - nPayAmount - nPayFee;
+            // if sub-cent change is required, the fee must be raised to at least MIN_TX_FEE
+            // or until nChange becomes zero
+            // NOTE: this depends on the exact behaviour of GetMinFee
+            if (nPayFee < MIN_TX_FEE && nChange > 0 && nChange < CENT)
+            {
+                int64 nMoveToFee = min(nChange, MIN_TX_FEE - nPayFee);
+                nChange -= nMoveToFee;
+                nPayFee += nMoveToFee;
+            }
+
+            // ppcoin: sub-cent change is moved to fee
+            if (nChange > 0 && nChange < MIN_TXOUT_AMOUNT)
+            {
+                nPayFee += nChange;
+                nChange = 0;
+            }
+
+            if (nChange > 0)
+            {
+                // Add a change address in the outputs
+                CTxOut txout(0, (CScript)vector<unsigned char>(24, 0));
+                txDummy.vout.push_back(txout);
+            }
+
+            // Bytes
+            nBytes = nBytesInputs + GetSerializeSize(*(CTransaction*)&txDummy, SER_NETWORK, PROTOCOL_VERSION);
+
+            // Priority
+            dPriority = dPriorityInputs / nBytes;
+            sPriorityLabel = CoinControlDialog::getPriorityLabel(dPriority);
+
+            // Fee
+            int64 nFee = nTransactionFee * (1 + (int64)nBytes / 1000);
+
+            // Min Fee
+            int64 nMinFee = txDummy.GetMinFee(1, false, GMF_SEND, nBytes);
+
+            if (nPayFee < max(nFee, nMinFee))
+            {
+                nPayFee = max(nFee, nMinFee);
+                continue;
+            }
+
+            // after fee
+            nAfterFee = nAmount - nPayFee;
+            if (nAfterFee < 0)
+                nAfterFee = 0;
+        }
+        break;
     }
-    
+
     // actually update labels
     int nDisplayUnit = BitcoinUnits::BTC;
     if (model && model->getOptionsModel())
