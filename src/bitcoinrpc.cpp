@@ -2480,7 +2480,7 @@ extern map<uint256, CAlert> mapAlerts;
 Value sendalert(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 6)
-	throw runtime_error(
+    throw runtime_error(
             "sendalert <message> <privatekey> <minver> <maxver> <priority> <id> [cancelupto]\n"
             "<message> is the alert text message\n"
             "<privatekey> is hex string of alert master private key\n"
@@ -3204,6 +3204,23 @@ Value gettxout(const Array& params, bool fHelp)
     return ret;
 }
 
+Value getrawmempool(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getrawmempool\n"
+            "Returns all transaction ids in memory pool.");
+
+    vector<uint256> vtxid;
+    mempool.queryHashes(vtxid);
+
+    Array a;
+    BOOST_FOREACH(const uint256& hash, vtxid)
+        a.push_back(hash.ToString());
+
+    return a;
+}
+
 //
 // Call Table
 //
@@ -3247,7 +3264,7 @@ static const CRPCCommand vRPCCommands[] =
     { "sendfrom",               &sendfrom,               false },
     { "sendmany",               &sendmany,               false },
     { "addmultisigaddress",     &addmultisigaddress,     false },
-    { "createmultisig",     	&createmultisig,	 true },
+    { "createmultisig",         &createmultisig,         true },
     { "getblock",               &getblock,               false },
     { "getblockhash",           &getblockhash,           false },
     { "gettransaction",         &gettransaction,         false },
@@ -3275,6 +3292,7 @@ static const CRPCCommand vRPCCommands[] =
     { "signrawtransaction",     &signrawtransaction,     false},
     { "sendrawtransaction",     &sendrawtransaction,     false},
     { "gettxout",               &gettxout,               true },
+    { "getrawmempool",          &getrawmempool,          true },
 };
 
 CRPCTable::CRPCTable()
@@ -3947,7 +3965,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "sendmany"                && n > 2) ConvertTo<boost::int64_t>(params[2]);
     if (strMethod == "reservebalance"          && n > 0) ConvertTo<bool>(params[0]);
     if (strMethod == "reservebalance"          && n > 1) ConvertTo<double>(params[1]);
-    if (strMethod == "createmultisig" 	       && n > 0) ConvertTo<boost::int64_t>(params[0]);
+    if (strMethod == "createmultisig"          && n > 0) ConvertTo<boost::int64_t>(params[0]);
     if (strMethod == "createmultisig"          && n > 1)
     {
         string s = params[1].get_str();
