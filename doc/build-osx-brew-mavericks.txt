@@ -29,12 +29,17 @@ https://github.com/bitcoin/bitcoin/issues/3228
 
 3.  Install dependencies from Homebrew
 
-brew doctor
-brew install berkeley-db4 openssl miniupnpc
-brew link berkeley-db4 --force
-brew link openssl --force
-sudo mkdir -p /opt/local/lib
-sudo ln -s /usr/local/lib /opt/local/lib/db48
+$ brew doctor
+$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb --without-java
+/private/tmp/berkeley-db4-UGpd0O/db-4.8.30 $ cd ..
+/private/tmp/berkeley-db4-UGpd0O $ db-4.8.30/dist/configure --prefix=/usr/local/Cellar/berkeley-db4/4.8.30 --mandir=/usr/local/Cellar/berkeley-db4/4.8.30/share/man --enable-cxx
+/private/tmp/berkeley-db4-UGpd0O $ make
+/private/tmp/berkeley-db4-UGpd0O $ make install
+/private/tmp/berkeley-db4-UGpd0O $ exit
+$ brew link berkeley-db4 --force
+$ brew link openssl --force
+$ sudo mkdir -p /opt/local/lib
+$ sudo ln -s /usr/local/lib /opt/local/lib/db48
 
 4.  Download and extract Boost from
 http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.gz/
