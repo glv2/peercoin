@@ -37,6 +37,7 @@ $ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berke
 /private/tmp/berkeley-db4-UGpd0O $ make install
 /private/tmp/berkeley-db4-UGpd0O $ exit
 $ brew link berkeley-db4 --force
+$ brew install openssl miniupnpc
 $ brew link openssl --force
 $ sudo mkdir -p /opt/local/lib
 $ sudo ln -s /usr/local/lib /opt/local/lib/db48
