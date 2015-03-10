@@ -284,6 +284,9 @@ void MultisigDialog::on_createTransactionButton_clicked()
 
 void MultisigDialog::on_transaction_textChanged()
 {
+    ui->fee->setStyleSheet("");
+    ui->statusLabel->setText("");
+
     while(ui->inputs->count())
         delete ui->inputs->takeAt(0)->widget();
     while(ui->outputs->count())
@@ -343,6 +346,24 @@ void MultisigDialog::on_transaction_textChanged()
     }
 
     updateRemoveEnabled();
+
+    // Check the fee
+    int64 transactionSize = ui->transaction->text().size() / 2;
+    if(transactionSize == 0)
+        return;
+    transactionSize += ui->inputs->count() * 73; // Future ECDSA signatures in DER format
+    int64 fee = (int64 ) (ui->fee->text().toDouble() * COIN);
+    int64 minFee = MIN_TX_FEE * (1 + (int64) transactionSize / 1000);
+    if(fee < minFee)
+    {
+        ui->fee->setStyleSheet("color:red;");
+        ui->statusLabel->setText(tr("The transaction fee might be too small."));
+    }
+    else if(fee > minFee)
+    {
+        ui->fee->setStyleSheet("color:red;");
+        ui->statusLabel->setText(tr("The transaction fee might be too big. Don't forget to add an output for the change address."));
+    }
 }
 
 void MultisigDialog::on_copyTransactionButton_clicked()
@@ -446,12 +467,12 @@ void MultisigDialog::on_signTransactionButton_clicked()
 
     if(fComplete)
     {
-        ui->statusLabel->setText(tr("Transaction signature is complete"));
+        ui->statusLabel->setText(tr("The transaction signature is complete."));
         ui->sendTransactionButton->setEnabled(true);
     }
     else
     {
-        ui->statusLabel->setText(tr("Transaction is NOT completely signed"));
+        ui->statusLabel->setText(tr("The transaction is NOT completely signed."));
         ui->sendTransactionButton->setEnabled(false);
     }
 }
@@ -472,13 +493,13 @@ void MultisigDialog::on_sendTransactionButton_clicked()
     int64 minFee = MIN_TX_FEE * (1 + (int64) transactionSize / 1000);
     if(fee < minFee)
     {
-        QMessageBox::StandardButton ret = QMessageBox::question(this, tr("Confirm send transaction"), tr("The fee of the transaction (%1 PPC) is smaller than the expected fee (%2 PPC). Do you want to send the transaction anyway?").arg((double) fee / COIN).arg((double) minFee / COIN), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+        QMessageBox::StandardButton ret = QMessageBox::question(this, tr("Confirm sending transaction"), tr("The fee of the transaction (%1 PPC) is smaller than the expected fee (%2 PPC). Do you want to send the transaction anyway?").arg((double) fee / COIN).arg((double) minFee / COIN), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
         if(ret != QMessageBox::Yes)
             return;
     }
     else if(fee > minFee)
     {
-        QMessageBox::StandardButton ret = QMessageBox::question(this, tr("Confirm send transaction"), tr("The fee of the transaction (%1 PPC) is bigger than the expected fee (%2 PPC). Do you want to send the transaction anyway?").arg((double) fee / COIN).arg((double) minFee / COIN), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+        QMessageBox::StandardButton ret = QMessageBox::question(this, tr("Confirm sending transaction"), tr("The fee of the transaction (%1 PPC) is bigger than the expected fee (%2 PPC). Do you want to send the transaction anyway?").arg((double) fee / COIN).arg((double) minFee / COIN), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
         if(ret != QMessageBox::Yes)
             return;
     }
@@ -588,7 +609,7 @@ void MultisigDialog::updateAmounts()
     outputsAmountStr.sprintf("%.6f", (double) outputsAmount / COIN);
     ui->outputsAmount->setText(outputsAmountStr);
 
-    // Update Fee amount
+    // Update fee amount
     int64 fee = inputsAmount - outputsAmount;
     QString feeStr;
     feeStr.sprintf("%.6f", (double) fee / COIN);
