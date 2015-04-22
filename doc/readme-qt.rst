@@ -1,4 +1,4 @@
-Bitcoin-qt: Qt4 GUI for Bitcoin
+Peercoin-qt: Qt4 GUI for Peercoin
 ===============================
 
 Build instructions
