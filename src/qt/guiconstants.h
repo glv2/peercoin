@@ -18,16 +18,16 @@ static const int STATUSBAR_ICONSIZE = 16;
 /* Transaction list -- negative amount */
 #define COLOR_NEGATIVE QColor(136, 0, 21)
 /* Table List -- negative amount */
-#define COLOR_NEGATIVE_TABLE QColor(224, 0, 0)
+#define COLOR_NEGATIVE_TABLE QColor(255, 80, 80)
 /* Transaction list -- positive amount */
 #define COLOR_POSITIVE QColor(0, 128, 0)
 /* Transaction list -- bare address (without label) */
 #define COLOR_BAREADDRESS QColor(140, 140, 140)
 
 /* Colors for minting tab for each coin age group */
-#define COLOR_MINT_YOUNG QColor(127, 127, 240)
-#define COLOR_MINT_MATURE QColor(127, 240, 127)
-#define COLOR_MINT_OLD QColor(240, 127, 127)
+#define COLOR_MINT_YOUNG QColor(128, 64, 64)
+#define COLOR_MINT_MATURE QColor(64, 128, 64)
+#define COLOR_MINT_OLD QColor(26, 77, 26)
 
 
 #endif // GUICONSTANTS_H
