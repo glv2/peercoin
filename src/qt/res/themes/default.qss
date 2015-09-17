@@ -147,7 +147,7 @@ QToolTip {
     background: #237123;
     border: 1px solid #218521;
     color: #fefefe;
-    opacity: 210;
+    opacity: 230;
 }
 
 /* Toolbar */
@@ -191,25 +191,28 @@ QFrame#frameOverview {
 }
 
 QFrame QLabel#titleBalance, QFrame QLabel#titleNumTransactions,
-QFrame QLabel#titleStake, QFrame QLabel#titleUnconfirmed {
+QFrame QLabel#titleMaturing, QFrame QLabel#titleUnconfirmed,
+QFrame QLabel#titleTotal {
     color: #008000;
-    font-size: 14px;
-    margin-left: 3px;
+    font-size: 20px;
+}
+
+QFrame QLabel#titleTotal, QFrame QLabel#labelTotal {
+    border-top: 1px solid #008000;
+}
+
+QFrame QLabel#titleNumTransactions, QFrame QLabel#labelNumTransactions {
+    margin-top: 20px;
 }
 
 QFrame QLabel#labelBalance, QFrame QLabel#labelNumTransactions,
-QFrame QLabel#labelStake, QFrame QLabel#labelUnconfirmed {
+QFrame QLabel#labelMaturing, QFrame QLabel#labelUnconfirmed,
+QFrame QLabel#labelTotal {
     font-weight: normal;
     font-size: 20px;
-    margin-bottom: 30px;
 }
 
-QFrame QLabel#titleStake, QFrame QLabel#labelStake,
-QFrame QLabel#titleNumTransactions, QFrame QLabel#labelNumTransactions {
-    margin-left: 70px;
-}
-
-QFrame QLabel#titleWallet {
+QFrame QLabel#titleBalances {
     font-weight: bold;
     font-size: 20px;
     margin-bottom: 30px;

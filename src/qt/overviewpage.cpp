@@ -97,26 +97,26 @@ public:
 OverviewPage::OverviewPage(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
-    currentBalance(-1),
-    currentStake(0),
-    currentUnconfirmedBalance(-1),
+    currentAvailable(-1),
+    currentMaturing(0),
+    currentUnconfirmed(-1),
     txdelegate(new TxViewDelegate())
 {
     ui->setupUi(this);
 
     // Balance: <balance>
     //ui->labelBalance->setFont(QFont("Monospace", -1, QFont::Bold));
-    ui->labelBalance->setToolTip(tr("Your current balance"));
+    ui->labelBalance->setToolTip(tr("Your current spendable balance"));
     ui->labelBalance->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
 
     // ppcoin: stake: <stake>
-    //ui->labelStake->setFont(QFont("Monospace", -1, QFont::Bold));
-    ui->labelStake->setToolTip(tr("Your current stake"));
-    ui->labelStake->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
+    //ui->labelMaturing->setFont(QFont("Monospace", -1, QFont::Bold));
+    ui->labelMaturing->setToolTip(tr("Total of newly minted or mined coins that are too young to be spent"));
+    ui->labelMaturing->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
 
     // Unconfirmed balance: <balance>
     //ui->labelUnconfirmed->setFont(QFont("Monospace", -1, QFont::Bold));
-    ui->labelUnconfirmed->setToolTip(tr("Total of transactions that have yet to be confirmed, and do not yet count toward the current balance"));
+    ui->labelUnconfirmed->setToolTip(tr("Total of transactions that have yet to be confirmed"));
     ui->labelUnconfirmed->setTextInteractionFlags(Qt::TextSelectableByMouse|Qt::TextSelectableByKeyboard);
 
     ui->labelNumTransactions->setToolTip(tr("Total number of transactions in wallet"));
@@ -138,15 +138,16 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(qint64 balance, qint64 stake, qint64 unconfirmedBalance)
+void OverviewPage::setBalance(qint64 available, qint64 maturing, qint64 unconfirmed)
 {
     int unit = model->getOptionsModel()->getDisplayUnit();
-    currentBalance = balance;
-    currentStake = stake;
-    currentUnconfirmedBalance = unconfirmedBalance;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
-    ui->labelStake->setText(BitcoinUnits::formatWithUnit(unit, stake));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
+    currentAvailable = available;
+    currentMaturing = maturing;
+    currentUnconfirmed = unconfirmed;
+    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, available, false, false));
+    ui->labelMaturing->setText(BitcoinUnits::formatWithUnit(unit, maturing, false, false));
+    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmed, false, false));
+    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, available + maturing + unconfirmed, false, false));
 }
 
 unsigned int OverviewPage::numDisplayedTransactions()
@@ -184,7 +185,7 @@ void OverviewPage::setModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance());
+        setBalance(model->getBalance(), model->getStake() + model->getNewMint() , model->getUnconfirmedBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
 
         setNumTransactions(model->getNumTransactions());
@@ -198,8 +199,8 @@ void OverviewPage::displayUnitChanged()
 {
     if(!model || !model->getOptionsModel())
         return;
-    if(currentBalance != -1)
-        setBalance(currentBalance, currentStake, currentUnconfirmedBalance);
+    if(currentAvailable != -1)
+        setBalance(currentAvailable, currentMaturing, currentUnconfirmed);
 
     txdelegate->unit = model->getOptionsModel()->getDisplayUnit();
     ui->listTransactions->update();
