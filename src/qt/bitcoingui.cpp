@@ -75,7 +75,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     notificator(0),
     rpcConsole(0)
 {
-    resize(850, 550);
+    resize(950, 650);
     setWindowTitle(tr("Peerunity Wallet"));
 
     QFontDatabase::addApplicationFont(":/fonts/weblysleek");
