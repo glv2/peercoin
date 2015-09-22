@@ -1260,92 +1260,102 @@ Cette étiquette devient rouge si la priorité est inférieure à &quot;moyenne&
 <context>
     <name>MintingView</name>
     <message>
-        <location filename="../mintingview.cpp" line="33"/>
+        <location filename="../mintingview.cpp" line="34"/>
         <source>transaction is too young</source>
         <translation>la transaction est trop jeune</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="40"/>
+        <location filename="../mintingview.cpp" line="41"/>
         <source>transaction is mature</source>
         <translation>la transaction est mature</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="47"/>
+        <location filename="../mintingview.cpp" line="48"/>
         <source>transaction  has reached maximum probability</source>
         <translation>la transaction a atteint la probabilité maximale</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="60"/>
+        <location filename="../mintingview.cpp" line="61"/>
         <source>Display minting probability within : </source>
         <translation>Afficher la probabilité de frappe dans les :</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="62"/>
+        <location filename="../mintingview.cpp" line="63"/>
         <source>10 min</source>
         <translation>10 min</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="63"/>
+        <location filename="../mintingview.cpp" line="64"/>
         <source>24 hours</source>
         <translation>24 heures</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="64"/>
+        <location filename="../mintingview.cpp" line="65"/>
         <source>30 days</source>
         <translation>30 jours</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="65"/>
+        <location filename="../mintingview.cpp" line="66"/>
         <source>90 days</source>
         <translation>90 jours</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="163"/>
+        <location filename="../mintingview.cpp" line="98"/>
+        <source>Copy address</source>
+        <translation>Copier l&apos;adresse</translation>
+    </message>
+    <message>
+        <location filename="../mintingview.cpp" line="99"/>
+        <source>Copy transaction id</source>
+        <translation>Copier l&apos;ID de la transaction</translation>
+    </message>
+    <message>
+        <location filename="../mintingview.cpp" line="173"/>
         <source>Export Minting Data</source>
         <translation>Exporter les données de frappe</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="164"/>
+        <location filename="../mintingview.cpp" line="174"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Valeurs séparées par des virgules (*.csv)</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="172"/>
+        <location filename="../mintingview.cpp" line="182"/>
         <source>Address</source>
         <translation>Adresse</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="173"/>
+        <location filename="../mintingview.cpp" line="183"/>
         <source>Transaction</source>
         <translation>Transaction</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="174"/>
+        <location filename="../mintingview.cpp" line="184"/>
         <source>Age</source>
         <translation>Âge</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="175"/>
+        <location filename="../mintingview.cpp" line="185"/>
         <source>CoinDay</source>
         <translation>JourPièce</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="176"/>
+        <location filename="../mintingview.cpp" line="186"/>
         <source>Balance</source>
         <translation>Solde</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="177"/>
+        <location filename="../mintingview.cpp" line="187"/>
         <source>MintingProbability</source>
         <translation>ProbabilitéDeFrappe</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="181"/>
+        <location filename="../mintingview.cpp" line="191"/>
         <source>Error exporting</source>
         <translation>Erreur lors de l&apos;exportation</translation>
     </message>
     <message>
-        <location filename="../mintingview.cpp" line="181"/>
+        <location filename="../mintingview.cpp" line="191"/>
         <source>Could not write to file %1.</source>
         <translation>Impossible d&apos;écrire sur le fichier %1.</translation>
     </message>
