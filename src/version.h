@@ -27,7 +27,7 @@ static const int PEERUNITY_VERSION =
 
 // ppcoin version - reference for code tracking
 #define PPCOIN_VERSION_MAJOR       0
-#define PPCOIN_VERSION_MINOR       4
+#define PPCOIN_VERSION_MINOR       5
 #define PPCOIN_VERSION_REVISION    0
 #define PPCOIN_VERSION_BUILD       0
 
