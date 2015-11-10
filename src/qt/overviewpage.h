@@ -32,7 +32,7 @@ signals:
     void transactionClicked(const QModelIndex &index);
 
 protected:
-    void resizeEvent(QResizeEvent *event) override;
+    void resizeEvent(QResizeEvent *event);
 
 private:
     Ui::OverviewPage *ui;
