@@ -1,4 +1,4 @@
-Peerunity 0.1.2
+Peerunity 0.1.3
 Copyright (c) 2014 Peerunity developers
 
 Distributed under the MIT/X11 software license, see the accompanying
