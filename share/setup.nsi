@@ -5,16 +5,16 @@ SetCompressor /SOLID lzma
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 0.1.2.0
+!define VERSION 0.1.3.0
 !define COMPANY "Peerunity project"
 !define URL http://github.com/peerunity/peerunity/
 
 # MUI Symbol Definitions
 !define MUI_ICON "../share/pixmaps/peerunity.ico"
-!define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP "../share/pixmaps/peerunity128.png"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP "../share/pixmaps/nsis-header.bmp"
+!define MUI_HEADERIMAGE_BITMAP "../share/pixmaps/peerunity64.png"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
 !define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
@@ -22,7 +22,7 @@ SetCompressor /SOLID lzma
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER Peerunity
 !define MUI_FINISHPAGE_RUN $INSTDIR\Peerunity.exe
 !define MUI_UNICON "${NSISDIR}\Contrib\Graphics\Icons\modern-uninstall.ico"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/nsis-wizard.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "../share/pixmaps/peerunity128.png"
 !define MUI_UNFINISHPAGE_NOAUTOCLOSE
 
 # Included files
