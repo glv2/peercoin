@@ -90,7 +90,7 @@ void SendCoinsDialog::setModel(WalletModel *model)
     }
     if(model)
     {
-        setBalance(model->getBalance(), model->getStake(), model->getUnconfirmedBalance());
+        setBalance(model->getBalance(), model->getStake() + model->getNewMint(), model->getUnconfirmedBalance());
         connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64)));
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
@@ -416,7 +416,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg;
+    CoinControlDialog dlg(this);
     dlg.setModel(model);
     dlg.exec();
     coinControlUpdateLabels();

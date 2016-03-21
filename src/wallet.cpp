@@ -1964,5 +1964,8 @@ void CWallet::ClearOrphans()
     }
 
     for(list<uint256>::const_iterator it = orphans.begin(); it != orphans.end(); ++it)
+    {
         EraseFromWallet(*it);
+        UpdatedTransaction(*it);
+    }
 }

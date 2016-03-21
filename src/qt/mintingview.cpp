@@ -7,16 +7,17 @@
 #include "guiutil.h"
 #include "csvmodelwriter.h"
 
-
+#include <QComboBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
-#include <QVBoxLayout>
-#include <QTableView>
-#include <QScrollBar>
 #include <QLabel>
 #include <QLineEdit>
-#include <QComboBox>
+#include <QMenu>
 #include <QMessageBox>
+#include <QPoint>
+#include <QScrollBar>
+#include <QTableView>
+#include <QVBoxLayout>
 
 MintingView::MintingView(QWidget *parent) :
     QWidget(parent), model(0), mintingView(0)
@@ -94,8 +95,17 @@ MintingView::MintingView(QWidget *parent) :
 
     mintingView = view;
 
-    connect(mintingCombo, SIGNAL(activated(int)), this, SLOT(chooseMintingInterval(int)));
+    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
+    QAction *copyTransactionIdAction = new QAction(tr("Copy transaction id"), this);
 
+    contextMenu =new QMenu();
+    contextMenu->addAction(copyAddressAction);
+    contextMenu->addAction(copyTransactionIdAction);
+
+    connect(mintingCombo, SIGNAL(activated(int)), this, SLOT(chooseMintingInterval(int)));
+    connect(view, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextualMenu(QPoint)));
+    connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(copyAddress()));
+    connect(copyTransactionIdAction, SIGNAL(triggered()), this, SLOT(copyTransactionId()));
 }
 
 
@@ -119,17 +129,17 @@ void MintingView::setModel(WalletModel *model)
         mintingView->verticalHeader()->hide();
 
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Address, 420);
+                MintingTableModel::Address, 300);
         mintingView->horizontalHeader()->setResizeMode(
                 MintingTableModel::TxHash, QHeaderView::Stretch);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Age, 120);
+                MintingTableModel::Age, 60);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::Balance, 120);
+                MintingTableModel::Balance, 100);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::CoinDay,120);
+                MintingTableModel::CoinDay,100);
         mintingView->horizontalHeader()->resizeSection(
-                MintingTableModel::MintProbability, 160);
+                MintingTableModel::MintProbability, 120);
     }
 }
 
@@ -181,4 +191,23 @@ void MintingView::exportClicked()
         QMessageBox::critical(this, tr("Error exporting"), tr("Could not write to file %1.").arg(filename),
                               QMessageBox::Abort, QMessageBox::Abort);
     }
+}
+
+void MintingView::contextualMenu(const QPoint &point)
+{
+    QModelIndex index = mintingView->indexAt(point);
+    if(index.isValid())
+    {
+        contextMenu->exec(QCursor::pos());
+    }
+}
+
+void MintingView::copyAddress()
+{
+    GUIUtil::copyEntryData(mintingView, MintingTableModel::Address, Qt::DisplayRole);
+}
+
+void MintingView::copyTransactionId()
+{
+    GUIUtil::copyEntryData(mintingView, MintingTableModel::TxHash, Qt::DisplayRole);
 }
