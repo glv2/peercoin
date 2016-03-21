@@ -29,12 +29,18 @@ https://github.com/bitcoin/bitcoin/issues/3228
 
 3.  Install dependencies from Homebrew
 
-brew doctor
-brew install berkeley-db4 openssl miniupnpc
-brew link berkeley-db4 --force
-brew link openssl --force
-sudo mkdir -p /opt/local/lib
-sudo ln -s /usr/local/lib /opt/local/lib/db48
+$ brew doctor
+$ brew install https://raw.github.com/mxcl/homebrew/master/Library/Formula/berkeley-db4.rb --without-java --interactive
+/private/tmp/berkeley-db4-UGpd0O/db-4.8.30 $ cd ..
+/private/tmp/berkeley-db4-UGpd0O $ db-4.8.30/dist/configure --prefix=/usr/local/Cellar/berkeley-db4/4.8.30 --mandir=/usr/local/Cellar/berkeley-db4/4.8.30/share/man --enable-cxx
+/private/tmp/berkeley-db4-UGpd0O $ make
+/private/tmp/berkeley-db4-UGpd0O $ make install
+/private/tmp/berkeley-db4-UGpd0O $ exit
+$ brew link berkeley-db4 --force
+$ brew install openssl miniupnpc
+$ brew link openssl --force
+$ sudo mkdir -p /opt/local/lib
+$ sudo ln -s /usr/local/lib /opt/local/lib/db48
 
 4.  Download and extract Boost from
 http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.gz/
@@ -123,3 +129,20 @@ install_name_tool -change "/opt/local/lib/db48/libdb_cxx-4.8.dylib" "@executable
 4.  Compress Peerunity-Qt.app into a zip
 
 Right-click on Peerunity-Qt.app and click Compress
+
+
+Troubleshooting
+
+Getting an error "EXCEPTION: 11DbException" "DbEnv::open: Invalid argument"?
+This has to do with using berkeley-db 4.8 via brew on OSX. Solution is to update berkeley db (warning, this may make your wallet.dat file incompatible with machines running berkeley-db 4.8).
+
+$ brew uninstall berkeley-db4
+$ brew install berkeley-db --without-java --interactive
+/private/tmp/berkeley-db-UGpd0O/db-5.3.28 $ cd ..
+/private/tmp/berkeley-db-UGpd0O $ db-5.3.28/dist/configure --prefix=/usr/local/Cellar/berkeley-db/5.3.28 --mandir=/usr/local/Cellar/berkeley-db/5.3.28/share/man --enable-cxx
+/private/tmp/berkeley-db-UGpd0O $ make
+/private/tmp/berkeley-db-UGpd0O $ make install
+/private/tmp/berkeley-db-UGpd0O $ exit
+$ brew link berkeley-db --force
+
+You must also ensure the build points to the correct BDB_LIB_SUFFIX. Set BDB_LIB_SUFFIX = -5.3 in your makefile, or open up peerunity.pro and edit line 321 to default BDB_LIB_SUFFIX to -5.3 instead of -4.8.
