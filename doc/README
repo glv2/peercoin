@@ -1,5 +1,5 @@
-Peerunity 0.1.3
-Copyright (c) 2014 Peerunity developers
+Peerunity 0.2.0
+Copyright (c) 2014-2016 Peerunity developers
 
 Distributed under the MIT/X11 software license, see the accompanying
 file license.txt or http://www.opensource.org/licenses/mit-license.php.
