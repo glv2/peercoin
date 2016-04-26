@@ -16,7 +16,7 @@
 // peerunity version - intended for display purpose only
 #define PEERUNITY_VERSION_MAJOR       0
 #define PEERUNITY_VERSION_MINOR       2
-#define PEERUNITY_VERSION_REVISION    0
+#define PEERUNITY_VERSION_REVISION    1
 #define PEERUNITY_VERSION_BUILD       0
 
 static const int PEERUNITY_VERSION =
